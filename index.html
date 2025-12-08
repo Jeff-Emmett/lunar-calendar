@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>International Fixed Calendar Converter</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text: #eaeaea;
+            --muted: #888;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--highlight);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            margin-bottom: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: var(--accent);
+            border: none;
+            color: var(--text);
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--highlight);
+        }
+
+        .tab.active {
+            background: var(--highlight);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 700px) {
+            .converter-grid {
+                grid-template-columns: 1fr;
+            }
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--highlight);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--highlight);
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--highlight);
+            padding-top: 3rem;
+        }
+
+        .result {
+            background: var(--accent);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .result .date {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--highlight);
+        }
+
+        .result .weekday {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .result .special {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: var(--highlight);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--accent);
+        }
+
+        /* Date Range Styles */
+        .range-results {
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .range-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--accent);
+        }
+
+        .range-row:nth-child(odd) {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .range-header {
+            font-weight: bold;
+            color: var(--highlight);
+            background: var(--accent) !important;
+        }
+
+        /* Calendar Styles */
+        .calendar-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .year-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .year-nav button {
+            background: var(--accent);
+            border: none;
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .year-nav button:hover {
+            background: var(--highlight);
+        }
+
+        .year-nav input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .month-card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .month-card h3 {
+            text-align: center;
+            color: var(--highlight);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .month-card.special-month h3 {
+            color: #ffd700;
+        }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 4px;
+        }
+
+        .weekday-header span {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--muted);
+            padding: 4px 0;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-cell:hover {
+            background: var(--highlight);
+        }
+
+        .day-cell.today {
+            background: var(--highlight);
+            font-weight: bold;
+        }
+
+        .day-cell.sunday {
+            color: var(--highlight);
+        }
+
+        .special-day {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            font-weight: bold;
+            grid-column: span 7;
+            aspect-ratio: auto;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        /* Info Section */
+        .info-section {
+            margin-top: 2rem;
+        }
+
+        .info-section h3 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        .month-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .month-item {
+            background: var(--accent);
+            padding: 0.5rem;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .month-item .num {
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feature {
+            background: var(--accent);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .feature h4 {
+            color: var(--highlight);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0.5rem;
+            }
+
+            .tabs, .calendar-controls, .btn, .no-print {
+                display: none !important;
+            }
+
+            .card, .month-card {
+                background: white;
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            .day-cell {
+                background: #f5f5f5;
+                border: 1px solid #ddd;
+            }
+
+            .day-cell.sunday {
+                color: #e94560;
+            }
+
+            .calendar-grid {
+                display: grid !important;
+            }
+
+            h1, h2, h3, .month-card h3 {
+                color: #333 !important;
+            }
+
+            .special-day {
+                background: #ffd700 !important;
+            }
+        }
+
+        .print-title {
+            display: none;
+        }
+
+        @media print {
+            .print-title {
+                display: block;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>International Fixed Calendar</h1>
+        <p class="subtitle">13 months × 28 days = Every date falls on the same weekday each year</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('converter')">Date Converter</button>
+            <button class="tab" onclick="showTab('range')">Date Range</button>
+            <button class="tab" onclick="showTab('calendar')">Full Calendar</button>
+            <button class="tab" onclick="showTab('info')">About IFC</button>
+        </div>
+
+        <!-- Single Date Converter -->
+        <div id="converter" class="tab-content active">
+            <div class="converter-grid">
+                <div class="card">
+                    <h2>Gregorian Calendar</h2>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="gregorian-date">
+                    </div>
+                    <button class="btn" onclick="setToday()">Today</button>
+                    <div class="result" id="ifc-result">
+                        <div class="date">-</div>
+                        <div class="weekday"></div>
+                    </div>
+                </div>
+
+                <div class="arrow">⇄</div>
+
+                <div class="card">
+                    <h2>Fixed Calendar</h2>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="number" id="ifc-year" value="2025" min="1" max="9999">
+                    </div>
+                    <div class="form-group">
+                        <label>Month</label>
+                        <select id="ifc-month">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">Sol</option>
+                            <option value="8">July</option>
+                            <option value="9">August</option>
+                            <option value="10">September</option>
+                            <option value="11">October</option>
+                            <option value="12">November</option>
+                            <option value="13">December</option>
+                            <option value="leap">Leap Day</option>
+                            <option value="year">Year Day</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="day-group">
+                        <label>Day (1-28)</label>
+                        <input type="number" id="ifc-day" value="1" min="1" max="28">
+                    </div>
+                    <div class="result" id="gregorian-result">
+                        <div class="date">-</div>
+                        <div class="weekday"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Converter -->
+        <div id="range" class="tab-content">
+            <div class="card">
+                <h2>Convert Date Range</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="range-start">
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="range-end">
+                    </div>
+                    <button class="btn" onclick="convertRange()">Convert</button>
+                </div>
+                <div class="range-results" id="range-results"></div>
+            </div>
+        </div>
+
+        <!-- Full Calendar View -->
+        <div id="calendar" class="tab-content">
+            <div class="print-title">
+                <h2>International Fixed Calendar <span id="print-year"></span></h2>
+            </div>
+            <div class="calendar-controls no-print">
+                <div class="year-nav">
+                    <button onclick="changeCalendarYear(-1)">←</button>
+                    <input type="number" id="calendar-year" value="2025" min="1" max="9999">
+                    <button onclick="changeCalendarYear(1)">→</button>
+                </div>
+                <button class="btn" onclick="setCalendarToday()">This Year</button>
+                <button class="btn btn-secondary" onclick="printCalendar()">Print Calendar</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+
+        <!-- About IFC -->
+        <div id="info" class="tab-content">
+            <div class="card info-section">
+                <h3>About the International Fixed Calendar</h3>
+                <div class="features">
+                    <div class="feature">
+                        <h4>13 Equal Months</h4>
+                        <p>Each month has exactly 28 days (4 complete weeks). The 13th month "Sol" is inserted between June and July.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>Year Day</h4>
+                        <p>The last day of the year (after December 28) is "Year Day" - a worldwide holiday outside the weekly cycle.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>Leap Day</h4>
+                        <p>In leap years, "Leap Day" occurs after June 28 (before Sol 1). It's also outside the weekly cycle.</p>
+                    </div>
+                    <div class="feature">
+                        <h4>Perpetual Calendar</h4>
+                        <p>Every year is identical! The 1st of each month is always Sunday. The 13th is always Friday. Scheduling becomes trivial.</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 2rem;">The 13 Months</h3>
+                <div class="month-list">
+                    <div class="month-item"><span class="num">1</span> January</div>
+                    <div class="month-item"><span class="num">2</span> February</div>
+                    <div class="month-item"><span class="num">3</span> March</div>
+                    <div class="month-item"><span class="num">4</span> April</div>
+                    <div class="month-item"><span class="num">5</span> May</div>
+                    <div class="month-item"><span class="num">6</span> June</div>
+                    <div class="month-item" style="background: var(--highlight);"><span class="num">7</span> Sol</div>
+                    <div class="month-item"><span class="num">8</span> July</div>
+                    <div class="month-item"><span class="num">9</span> August</div>
+                    <div class="month-item"><span class="num">10</span> September</div>
+                    <div class="month-item"><span class="num">11</span> October</div>
+                    <div class="month-item"><span class="num">12</span> November</div>
+                    <div class="month-item"><span class="num">13</span> December</div>
+                </div>
+
+                <h3 style="margin-top: 2rem;">IFC Weekday Pattern</h3>
+                <p style="color: var(--muted); margin-top: 0.5rem;">Every month follows the same pattern. Day 1 is always Sunday:</p>
+                <div style="margin-top: 1rem; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <tr style="background: var(--accent);">
+                            <th style="padding: 0.5rem; text-align: center;">Sun</th>
+                            <th style="padding: 0.5rem; text-align: center;">Mon</th>
+                            <th style="padding: 0.5rem; text-align: center;">Tue</th>
+                            <th style="padding: 0.5rem; text-align: center;">Wed</th>
+                            <th style="padding: 0.5rem; text-align: center;">Thu</th>
+                            <th style="padding: 0.5rem; text-align: center;">Fri</th>
+                            <th style="padding: 0.5rem; text-align: center;">Sat</th>
+                        </tr>
+                        <tr><td style="padding: 0.5rem; text-align: center; color: var(--highlight);">1</td><td style="padding: 0.5rem; text-align: center;">2</td><td style="padding: 0.5rem; text-align: center;">3</td><td style="padding: 0.5rem; text-align: center;">4</td><td style="padding: 0.5rem; text-align: center;">5</td><td style="padding: 0.5rem; text-align: center;">6</td><td style="padding: 0.5rem; text-align: center;">7</td></tr>
+                        <tr><td style="padding: 0.5rem; text-align: center; color: var(--highlight);">8</td><td style="padding: 0.5rem; text-align: center;">9</td><td style="padding: 0.5rem; text-align: center;">10</td><td style="padding: 0.5rem; text-align: center;">11</td><td style="padding: 0.5rem; text-align: center;">12</td><td style="padding: 0.5rem; text-align: center;">13</td><td style="padding: 0.5rem; text-align: center;">14</td></tr>
+                        <tr><td style="padding: 0.5rem; text-align: center; color: var(--highlight);">15</td><td style="padding: 0.5rem; text-align: center;">16</td><td style="padding: 0.5rem; text-align: center;">17</td><td style="padding: 0.5rem; text-align: center;">18</td><td style="padding: 0.5rem; text-align: center;">19</td><td style="padding: 0.5rem; text-align: center;">20</td><td style="padding: 0.5rem; text-align: center;">21</td></tr>
+                        <tr><td style="padding: 0.5rem; text-align: center; color: var(--highlight);">22</td><td style="padding: 0.5rem; text-align: center;">23</td><td style="padding: 0.5rem; text-align: center;">24</td><td style="padding: 0.5rem; text-align: center;">25</td><td style="padding: 0.5rem; text-align: center;">26</td><td style="padding: 0.5rem; text-align: center;">27</td><td style="padding: 0.5rem; text-align: center;">28</td></tr>
+                    </table>
+                </div>
+
+                <h3 style="margin-top: 2rem;">History</h3>
+                <p style="color: var(--muted); margin-top: 0.5rem; line-height: 1.6;">
+                    The International Fixed Calendar was proposed by Moses B. Cotsworth in 1902 and later championed by George Eastman (founder of Kodak).
+                    Eastman used it at Kodak from 1928 to 1989. The League of Nations considered adopting it in the 1920s-30s but faced opposition from religious groups
+                    concerned about the "blank days" disrupting the weekly Sabbath cycle.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const IFC_MONTHS = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'Sol', 'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        const IFC_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const IFC_WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        }
+
+        function getDayOfYear(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
+
+        function gregorianToIFC(date) {
+            const year = date.getFullYear();
+            const dayOfYear = getDayOfYear(date);
+            const leap = isLeapYear(year);
+
+            if (dayOfYear === (leap ? 366 : 365)) {
+                return { year, month: null, day: null, special: 'Year Day', weekday: null };
+            }
+
+            if (leap && dayOfYear === 169) {
+                return { year, month: null, day: null, special: 'Leap Day', weekday: null };
+            }
+
+            let adjustedDay = dayOfYear;
+            if (leap && dayOfYear > 169) {
+                adjustedDay = dayOfYear - 1;
+            }
+
+            const month = Math.ceil(adjustedDay / 28);
+            const day = ((adjustedDay - 1) % 28) + 1;
+            const weekdayIndex = (day - 1) % 7;
+
+            return {
+                year, month, day,
+                monthName: IFC_MONTHS[month - 1],
+                special: null,
+                weekday: IFC_WEEKDAYS[weekdayIndex]
+            };
+        }
+
+        function ifcToGregorian(year, month, day, special) {
+            const leap = isLeapYear(year);
+
+            if (special === 'year') {
+                const lastDay = leap ? 366 : 365;
+                return dayOfYearToDate(year, lastDay);
+            }
+
+            if (special === 'leap') {
+                if (!leap) return { error: `${year} is not a leap year` };
+                return dayOfYearToDate(year, 169);
+            }
+
+            let dayOfYear = (month - 1) * 28 + day;
+            if (leap && month > 6) dayOfYear += 1;
+
+            return dayOfYearToDate(year, dayOfYear);
+        }
+
+        function dayOfYearToDate(year, dayOfYear) {
+            const date = new Date(year, 0, dayOfYear);
+            return {
+                date,
+                formatted: date.toLocaleDateString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                }),
+                weekday: IFC_WEEKDAYS[date.getDay()]
+            };
+        }
+
+        // Tab switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabId === 'calendar') renderCalendar();
+        }
+
+        // Single date converter
+        function updateIFCResult() {
+            const input = document.getElementById('gregorian-date').value;
+            const resultDiv = document.getElementById('ifc-result');
+
+            if (!input) {
+                resultDiv.querySelector('.date').textContent = '-';
+                resultDiv.querySelector('.weekday').textContent = '';
+                return;
+            }
+
+            const date = new Date(input + 'T12:00:00');
+            const ifc = gregorianToIFC(date);
+
+            if (ifc.special) {
+                resultDiv.querySelector('.date').innerHTML = `<span class="special">${ifc.special}</span>, ${ifc.year}`;
+                resultDiv.querySelector('.weekday').textContent = 'Outside the weekly cycle';
+            } else {
+                resultDiv.querySelector('.date').textContent = `${ifc.monthName} ${ifc.day}, ${ifc.year}`;
+                resultDiv.querySelector('.weekday').textContent = ifc.weekday;
+            }
+        }
+
+        function updateGregorianResult() {
+            const year = parseInt(document.getElementById('ifc-year').value);
+            const monthValue = document.getElementById('ifc-month').value;
+            const day = parseInt(document.getElementById('ifc-day').value);
+            const resultDiv = document.getElementById('gregorian-result');
+            const dayGroup = document.getElementById('day-group');
+
+            dayGroup.style.display = (monthValue === 'leap' || monthValue === 'year') ? 'none' : 'block';
+
+            if (!year || (monthValue !== 'leap' && monthValue !== 'year' && !day)) {
+                resultDiv.querySelector('.date').textContent = '-';
+                resultDiv.querySelector('.weekday').textContent = '';
+                return;
+            }
+
+            const result = (monthValue === 'leap' || monthValue === 'year')
+                ? ifcToGregorian(year, null, null, monthValue)
+                : ifcToGregorian(year, parseInt(monthValue), day, null);
+
+            if (result.error) {
+                resultDiv.querySelector('.date').textContent = result.error;
+                resultDiv.querySelector('.weekday').textContent = '';
+            } else {
+                resultDiv.querySelector('.date').textContent = result.formatted;
+                resultDiv.querySelector('.weekday').textContent = '';
+            }
+        }
+
+        function setToday() {
+            const today = new Date();
+            document.getElementById('gregorian-date').value = today.toISOString().split('T')[0];
+            updateIFCResult();
+        }
+
+        // Date range converter
+        function convertRange() {
+            const startInput = document.getElementById('range-start').value;
+            const endInput = document.getElementById('range-end').value;
+            const resultsDiv = document.getElementById('range-results');
+
+            if (!startInput || !endInput) {
+                resultsDiv.innerHTML = '<p style="color: var(--muted); text-align: center;">Select both dates</p>';
+                return;
+            }
+
+            const start = new Date(startInput + 'T12:00:00');
+            const end = new Date(endInput + 'T12:00:00');
+
+            if (end < start) {
+                resultsDiv.innerHTML = '<p style="color: var(--highlight); text-align: center;">End date must be after start date</p>';
+                return;
+            }
+
+            const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            if (daysDiff > 366) {
+                resultsDiv.innerHTML = '<p style="color: var(--highlight); text-align: center;">Range limited to 366 days</p>';
+                return;
+            }
+
+            let html = '<div class="range-row range-header"><span>Gregorian</span><span>Fixed Calendar</span></div>';
+
+            const current = new Date(start);
+            while (current <= end) {
+                const ifc = gregorianToIFC(current);
+                const gregStr = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const ifcStr = ifc.special
+                    ? `<span class="special">${ifc.special}</span>`
+                    : `${ifc.monthName} ${ifc.day}`;
+
+                html += `<div class="range-row"><span>${gregStr}</span><span>${ifcStr}</span></div>`;
+                current.setDate(current.getDate() + 1);
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Full calendar view
+        function renderCalendar() {
+            const year = parseInt(document.getElementById('calendar-year').value) || new Date().getFullYear();
+            const grid = document.getElementById('calendar-grid');
+            const leap = isLeapYear(year);
+            const today = gregorianToIFC(new Date());
+
+            document.getElementById('print-year').textContent = year;
+
+            let html = '';
+
+            for (let m = 1; m <= 13; m++) {
+                const monthName = IFC_MONTHS[m - 1];
+                const isSpecial = m === 7;
+
+                html += `<div class="month-card ${isSpecial ? 'special-month' : ''}">`;
+                html += `<h3>${monthName}</h3>`;
+                html += '<div class="weekday-header">';
+                IFC_WEEKDAYS_SHORT.forEach(d => html += `<span>${d}</span>`);
+                html += '</div>';
+                html += '<div class="days-grid">';
+
+                for (let d = 1; d <= 28; d++) {
+                    const isToday = today.year === year && today.month === m && today.day === d;
+                    const isSunday = (d - 1) % 7 === 0;
+                    html += `<div class="day-cell ${isToday ? 'today' : ''} ${isSunday ? 'sunday' : ''}"
+                             onclick="showDateInfo(${year}, ${m}, ${d})">${d}</div>`;
+                }
+
+                // Add Leap Day after June
+                if (m === 6 && leap) {
+                    html += '<div class="special-day">Leap Day</div>';
+                }
+
+                html += '</div></div>';
+            }
+
+            // Year Day at the end
+            html += `<div class="month-card special-month">
+                <h3>Year Day</h3>
+                <div class="special-day" style="margin-top: 0;">Worldwide Holiday - Outside Weekly Cycle</div>
+            </div>`;
+
+            grid.innerHTML = html;
+        }
+
+        function showDateInfo(year, month, day) {
+            const result = ifcToGregorian(year, month, day, null);
+            alert(`${IFC_MONTHS[month-1]} ${day}, ${year}\n\nGregorian: ${result.formatted}`);
+        }
+
+        function changeCalendarYear(delta) {
+            const input = document.getElementById('calendar-year');
+            input.value = parseInt(input.value) + delta;
+            renderCalendar();
+        }
+
+        function setCalendarToday() {
+            document.getElementById('calendar-year').value = new Date().getFullYear();
+            renderCalendar();
+        }
+
+        function printCalendar() {
+            window.print();
+        }
+
+        // Event listeners
+        document.getElementById('gregorian-date').addEventListener('change', updateIFCResult);
+        document.getElementById('ifc-year').addEventListener('input', updateGregorianResult);
+        document.getElementById('ifc-month').addEventListener('change', updateGregorianResult);
+        document.getElementById('ifc-day').addEventListener('input', updateGregorianResult);
+        document.getElementById('calendar-year').addEventListener('change', renderCalendar);
+
+        // Initialize
+        setToday();
+        updateGregorianResult();
+    </script>
+</body>
+</html>
