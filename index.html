@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>International Fixed Calendar Converter</title>
+    <meta name="description" content="Convert dates between the Gregorian calendar and the International Fixed Calendar (IFC). 13 months × 28 days = every date falls on the same weekday each year.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lunar.jeffemmett.com/">
+    <meta property="og:title" content="International Fixed Calendar Converter">
+    <meta property="og:description" content="Convert dates between the Gregorian calendar and the International Fixed Calendar (IFC). 13 months × 28 days = every date falls on the same weekday each year.">
+    <meta property="og:image" content="https://lunar.jeffemmett.com/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://lunar.jeffemmett.com/">
+    <meta name="twitter:title" content="International Fixed Calendar Converter">
+    <meta name="twitter:description" content="Convert dates between the Gregorian calendar and the International Fixed Calendar (IFC). 13 months × 28 days = every date falls on the same weekday each year.">
+    <meta name="twitter:image" content="https://lunar.jeffemmett.com/og-image.jpg">
+
     <style>
         :root {
             --bg: #1a1a2e;
@@ -430,6 +448,315 @@
                 margin-bottom: 1rem;
             }
         }
+
+        /* Visual Overlap Styles */
+        .overlap-container {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            background: var(--accent);
+            border: none;
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--highlight);
+        }
+
+        .zoom-btn.active {
+            background: var(--highlight);
+        }
+
+        .date-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .date-nav button {
+            background: var(--accent);
+            border: none;
+            color: var(--text);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .date-nav button:hover {
+            background: var(--highlight);
+        }
+
+        .date-nav .current-date {
+            min-width: 150px;
+            text-align: center;
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        .overlap-view {
+            position: relative;
+        }
+
+        .calendar-track {
+            margin-bottom: 1rem;
+        }
+
+        .track-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .track-label .cal-name {
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .track-days {
+            display: flex;
+            gap: 2px;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+        }
+
+        .track-day {
+            min-width: 80px;
+            flex-shrink: 0;
+            background: var(--bg);
+            border-radius: 6px;
+            padding: 0.5rem;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .track-day:hover {
+            border-color: var(--highlight);
+        }
+
+        .track-day.selected {
+            background: var(--highlight);
+            border-color: var(--highlight);
+        }
+
+        .track-day.today {
+            border-color: #ffd700;
+        }
+
+        .track-day .day-num {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .track-day .day-name {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .track-day .month-label {
+            font-size: 0.65rem;
+            color: var(--highlight);
+            margin-top: 2px;
+        }
+
+        .track-day.special {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        }
+
+        .track-day.special .day-num,
+        .track-day.special .day-name,
+        .track-day.special .month-label {
+            color: #000;
+        }
+
+        .connector-canvas {
+            width: 100%;
+            height: 60px;
+            margin: -0.5rem 0;
+        }
+
+        .overlap-legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.gregorian {
+            background: #4a9eff;
+        }
+
+        .legend-dot.ifc {
+            background: var(--highlight);
+        }
+
+        .legend-dot.overlap {
+            background: linear-gradient(135deg, #4a9eff, var(--highlight));
+        }
+
+        /* Month view styles */
+        .month-overlap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 1rem;
+        }
+
+        .month-day-cell {
+            background: var(--bg);
+            border-radius: 6px;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .month-day-cell:hover {
+            border-color: var(--highlight);
+        }
+
+        .month-day-cell.selected {
+            border-color: var(--highlight);
+            background: var(--accent);
+        }
+
+        .month-day-cell .greg-date {
+            font-size: 0.75rem;
+            color: #4a9eff;
+            font-weight: bold;
+        }
+
+        .month-day-cell .ifc-date {
+            font-size: 0.75rem;
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        .month-day-cell .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--accent);
+            margin: 4px 0;
+        }
+
+        .month-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .month-header span {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--muted);
+            padding: 0.5rem;
+        }
+
+        /* Day detail view */
+        .day-detail {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .detail-card {
+            text-align: center;
+        }
+
+        .detail-card h4 {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-card .big-date {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .detail-card .full-date {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .detail-card.gregorian .big-date {
+            color: #4a9eff;
+        }
+
+        .detail-card.ifc .big-date {
+            color: var(--highlight);
+        }
+
+        .detail-equals {
+            font-size: 2rem;
+            color: var(--muted);
+        }
+
+        @media (max-width: 600px) {
+            .day-detail {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .detail-equals {
+                transform: rotate(90deg);
+            }
+            .track-day {
+                min-width: 60px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -440,6 +767,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('converter')">Date Converter</button>
             <button class="tab" onclick="showTab('range')">Date Range</button>
+            <button class="tab" onclick="showTab('overlap')">Visual Overlap</button>
             <button class="tab" onclick="showTab('calendar')">Full Calendar</button>
             <button class="tab" onclick="showTab('info')">About IFC</button>
         </div>
@@ -516,6 +844,42 @@
                     <button class="btn" onclick="convertRange()">Convert</button>
                 </div>
                 <div class="range-results" id="range-results"></div>
+            </div>
+        </div>
+
+        <!-- Visual Overlap View -->
+        <div id="overlap" class="tab-content">
+            <div class="overlap-container">
+                <div class="zoom-controls">
+                    <button class="zoom-btn active" onclick="setOverlapZoom('month')" id="zoom-month">Month</button>
+                    <button class="zoom-btn" onclick="setOverlapZoom('week')" id="zoom-week">Week</button>
+                    <button class="zoom-btn" onclick="setOverlapZoom('day')" id="zoom-day">Day</button>
+                    <div class="date-nav">
+                        <button onclick="navigateOverlap(-1)" title="Previous">←</button>
+                        <span class="current-date" id="overlap-current-date">-</span>
+                        <button onclick="navigateOverlap(1)" title="Next">→</button>
+                        <button class="btn" onclick="overlapToToday()" style="margin-left: 0.5rem;">Today</button>
+                    </div>
+                </div>
+
+                <div id="overlap-view" class="overlap-view">
+                    <!-- Content rendered by JavaScript -->
+                </div>
+
+                <div class="overlap-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot gregorian"></div>
+                        <span>Gregorian Calendar</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot ifc"></div>
+                        <span>International Fixed Calendar</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="border: 2px solid #ffd700; background: transparent;"></div>
+                        <span>Today</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -694,6 +1058,12 @@
             event.target.classList.add('active');
 
             if (tabId === 'calendar') renderCalendar();
+            if (tabId === 'overlap') {
+                if (!overlapState.selectedDate) {
+                    overlapState.selectedDate = new Date();
+                }
+                renderOverlapView();
+            }
         }
 
         // Single date converter
@@ -867,6 +1237,376 @@
         document.getElementById('ifc-month').addEventListener('change', updateGregorianResult);
         document.getElementById('ifc-day').addEventListener('input', updateGregorianResult);
         document.getElementById('calendar-year').addEventListener('change', renderCalendar);
+
+        // ==================== VISUAL OVERLAP FUNCTIONS ====================
+
+        let overlapState = {
+            zoom: 'month',          // 'month', 'week', 'day'
+            centerDate: new Date(), // Current center date for navigation
+            selectedDate: null      // Currently selected date for detail view
+        };
+
+        const GREG_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                             'July', 'August', 'September', 'October', 'November', 'December'];
+        const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function setOverlapZoom(zoom) {
+            overlapState.zoom = zoom;
+            document.querySelectorAll('.zoom-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`zoom-${zoom}`).classList.add('active');
+            renderOverlapView();
+        }
+
+        function navigateOverlap(delta) {
+            const d = overlapState.centerDate;
+            switch (overlapState.zoom) {
+                case 'month':
+                    d.setMonth(d.getMonth() + delta);
+                    break;
+                case 'week':
+                    d.setDate(d.getDate() + (delta * 7));
+                    break;
+                case 'day':
+                    d.setDate(d.getDate() + delta);
+                    break;
+            }
+            renderOverlapView();
+        }
+
+        function overlapToToday() {
+            overlapState.centerDate = new Date();
+            overlapState.selectedDate = new Date();
+            renderOverlapView();
+        }
+
+        function selectOverlapDate(dateStr) {
+            overlapState.selectedDate = new Date(dateStr + 'T12:00:00');
+            renderOverlapView();
+        }
+
+        function formatGregorianShort(date) {
+            return `${GREG_MONTHS[date.getMonth()].substring(0, 3)} ${date.getDate()}`;
+        }
+
+        function formatIFCShort(ifc) {
+            if (ifc.special) return ifc.special;
+            return `${ifc.monthName.substring(0, 3)} ${ifc.day}`;
+        }
+
+        function renderOverlapView() {
+            const container = document.getElementById('overlap-view');
+            const dateLabel = document.getElementById('overlap-current-date');
+
+            switch (overlapState.zoom) {
+                case 'month':
+                    renderMonthOverlap(container, dateLabel);
+                    break;
+                case 'week':
+                    renderWeekOverlap(container, dateLabel);
+                    break;
+                case 'day':
+                    renderDayOverlap(container, dateLabel);
+                    break;
+            }
+        }
+
+        function renderMonthOverlap(container, dateLabel) {
+            const center = overlapState.centerDate;
+            const year = center.getFullYear();
+            const month = center.getMonth();
+            const today = new Date();
+
+            dateLabel.textContent = `${GREG_MONTHS[month]} ${year}`;
+
+            // Get first and last day of the Gregorian month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startPadding = firstDay.getDay(); // Day of week (0-6)
+
+            let html = `
+                <div class="month-header">
+                    ${WEEKDAYS_SHORT.map(d => `<span>${d}</span>`).join('')}
+                </div>
+                <div class="month-overlap-grid">
+            `;
+
+            // Add padding for first week
+            for (let i = 0; i < startPadding; i++) {
+                html += '<div class="month-day-cell" style="opacity: 0.3;"></div>';
+            }
+
+            // Add each day of the month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const ifc = gregorianToIFC(date);
+                const isToday = date.toDateString() === today.toDateString();
+                const isSelected = overlapState.selectedDate &&
+                                   date.toDateString() === overlapState.selectedDate.toDateString();
+                const dateStr = date.toISOString().split('T')[0];
+
+                const ifcDisplay = ifc.special
+                    ? `<span style="color: #ffd700;">${ifc.special}</span>`
+                    : `${ifc.monthName.substring(0, 3)} ${ifc.day}`;
+
+                html += `
+                    <div class="month-day-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}"
+                         onclick="selectOverlapDate('${dateStr}')"
+                         style="${isToday ? 'border-color: #ffd700;' : ''}">
+                        <div class="greg-date">${GREG_MONTHS[month].substring(0, 3)} ${day}</div>
+                        <div class="divider"></div>
+                        <div class="ifc-date">${ifcDisplay}</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            // Add day detail if a date is selected
+            if (overlapState.selectedDate) {
+                html += renderDayDetail(overlapState.selectedDate);
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderWeekOverlap(container, dateLabel) {
+            const center = overlapState.centerDate;
+            const today = new Date();
+
+            // Get the week centered on the current date (3 days before, selected, 3 days after)
+            const days = [];
+            for (let i = -3; i <= 3; i++) {
+                const d = new Date(center);
+                d.setDate(center.getDate() + i);
+                days.push(d);
+            }
+
+            dateLabel.textContent = `Week of ${formatGregorianShort(days[3])}`;
+
+            let html = `
+                <div class="calendar-track">
+                    <div class="track-label">
+                        <span class="cal-name" style="color: #4a9eff;">Gregorian Calendar</span>
+                    </div>
+                    <div class="track-days">
+            `;
+
+            // Gregorian track
+            days.forEach((date, idx) => {
+                const isToday = date.toDateString() === today.toDateString();
+                const isCenter = idx === 3;
+                const dateStr = date.toISOString().split('T')[0];
+
+                html += `
+                    <div class="track-day ${isToday ? 'today' : ''} ${isCenter ? 'selected' : ''}"
+                         onclick="selectOverlapDate('${dateStr}'); overlapState.centerDate = new Date('${dateStr}T12:00:00'); renderOverlapView();">
+                        <div class="day-num">${date.getDate()}</div>
+                        <div class="day-name">${WEEKDAYS_SHORT[date.getDay()]}</div>
+                        <div class="month-label">${GREG_MONTHS[date.getMonth()].substring(0, 3)}</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+                <svg class="connector-canvas" id="connector-svg"></svg>
+                <div class="calendar-track">
+                    <div class="track-label">
+                        <span class="cal-name" style="color: var(--highlight);">International Fixed Calendar</span>
+                    </div>
+                    <div class="track-days">
+            `;
+
+            // IFC track
+            days.forEach((date, idx) => {
+                const ifc = gregorianToIFC(date);
+                const isToday = date.toDateString() === today.toDateString();
+                const isCenter = idx === 3;
+                const isSpecial = !!ifc.special;
+                const dateStr = date.toISOString().split('T')[0];
+
+                const dayNum = ifc.special ? '★' : ifc.day;
+                const dayName = ifc.special ? '' : IFC_WEEKDAYS_SHORT[(ifc.day - 1) % 7];
+                const monthLabel = ifc.special ? ifc.special : ifc.monthName.substring(0, 3);
+
+                html += `
+                    <div class="track-day ${isToday ? 'today' : ''} ${isCenter ? 'selected' : ''} ${isSpecial ? 'special' : ''}"
+                         onclick="selectOverlapDate('${dateStr}'); overlapState.centerDate = new Date('${dateStr}T12:00:00'); renderOverlapView();">
+                        <div class="day-num">${dayNum}</div>
+                        <div class="day-name">${dayName}</div>
+                        <div class="month-label">${monthLabel}</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            // Add day detail
+            html += renderDayDetail(days[3]);
+
+            container.innerHTML = html;
+
+            // Draw connector lines
+            setTimeout(() => drawConnectorLines(), 10);
+        }
+
+        function renderDayOverlap(container, dateLabel) {
+            const center = overlapState.centerDate;
+            const today = new Date();
+
+            // Get 7 consecutive days centered on selected
+            const days = [];
+            for (let i = -3; i <= 3; i++) {
+                const d = new Date(center);
+                d.setDate(center.getDate() + i);
+                days.push(d);
+            }
+
+            const ifc = gregorianToIFC(center);
+            if (ifc.special) {
+                dateLabel.textContent = `${ifc.special}, ${center.getFullYear()}`;
+            } else {
+                dateLabel.textContent = `${ifc.monthName} ${ifc.day}, ${center.getFullYear()}`;
+            }
+
+            // Build detailed day view with navigation
+            let html = `
+                <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 1rem;">
+            `;
+
+            days.forEach((date, idx) => {
+                const dayIfc = gregorianToIFC(date);
+                const isToday = date.toDateString() === today.toDateString();
+                const isCenter = idx === 3;
+                const isSpecial = !!dayIfc.special;
+                const dateStr = date.toISOString().split('T')[0];
+
+                html += `
+                    <div class="track-day ${isToday ? 'today' : ''} ${isCenter ? 'selected' : ''} ${isSpecial ? 'special' : ''}"
+                         style="min-width: 70px;"
+                         onclick="overlapState.centerDate = new Date('${dateStr}T12:00:00'); renderOverlapView();">
+                        <div class="day-num">${date.getDate()}</div>
+                        <div class="day-name">${WEEKDAYS_SHORT[date.getDay()]}</div>
+                        <div class="month-label" style="font-size: 0.6rem;">${GREG_MONTHS[date.getMonth()].substring(0, 3)}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // Full detail for center date
+            html += renderDayDetail(center, true);
+
+            container.innerHTML = html;
+        }
+
+        function renderDayDetail(date, expanded = false) {
+            const ifc = gregorianToIFC(date);
+            const gregFormatted = date.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            let ifcFormatted, ifcWeekday;
+            if (ifc.special) {
+                ifcFormatted = `${ifc.special}, ${ifc.year}`;
+                ifcWeekday = 'Outside weekly cycle';
+            } else {
+                ifcFormatted = `${ifc.monthName} ${ifc.day}, ${ifc.year}`;
+                ifcWeekday = ifc.weekday;
+            }
+
+            const dayOfYear = getDayOfYear(date);
+            const daysRemaining = (isLeapYear(date.getFullYear()) ? 366 : 365) - dayOfYear;
+
+            let extraInfo = '';
+            if (expanded) {
+                extraInfo = `
+                    <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--accent);">
+                        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                            <div>
+                                <div style="color: var(--muted); font-size: 0.75rem;">Day of Year</div>
+                                <div style="font-size: 1.2rem; font-weight: bold;">${dayOfYear}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--muted); font-size: 0.75rem;">Days Remaining</div>
+                                <div style="font-size: 1.2rem; font-weight: bold;">${daysRemaining}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--muted); font-size: 0.75rem;">Leap Year</div>
+                                <div style="font-size: 1.2rem; font-weight: bold;">${isLeapYear(date.getFullYear()) ? 'Yes' : 'No'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="day-detail">
+                    <div class="detail-card gregorian">
+                        <h4>Gregorian</h4>
+                        <div class="big-date">${GREG_MONTHS[date.getMonth()]} ${date.getDate()}</div>
+                        <div class="full-date">${gregFormatted}</div>
+                    </div>
+                    <div class="detail-equals">=</div>
+                    <div class="detail-card ifc">
+                        <h4>International Fixed Calendar</h4>
+                        <div class="big-date">${ifc.special ? ifc.special : ifc.monthName + ' ' + ifc.day}</div>
+                        <div class="full-date">${ifcWeekday}</div>
+                    </div>
+                </div>
+                ${extraInfo}
+            `;
+        }
+
+        function drawConnectorLines() {
+            const svg = document.getElementById('connector-svg');
+            if (!svg) return;
+
+            const tracks = document.querySelectorAll('.track-days');
+            if (tracks.length < 2) return;
+
+            const topDays = tracks[0].querySelectorAll('.track-day');
+            const bottomDays = tracks[1].querySelectorAll('.track-day');
+
+            if (topDays.length === 0 || bottomDays.length === 0) return;
+
+            const svgRect = svg.getBoundingClientRect();
+            let lines = '';
+
+            topDays.forEach((topDay, idx) => {
+                if (idx >= bottomDays.length) return;
+
+                const bottomDay = bottomDays[idx];
+                const topRect = topDay.getBoundingClientRect();
+                const bottomRect = bottomDay.getBoundingClientRect();
+
+                const x1 = topRect.left + topRect.width / 2 - svgRect.left;
+                const y1 = 0;
+                const x2 = bottomRect.left + bottomRect.width / 2 - svgRect.left;
+                const y2 = 60;
+
+                const isSelected = topDay.classList.contains('selected');
+                const color = isSelected ? 'var(--highlight)' : 'var(--accent)';
+                const width = isSelected ? 2 : 1;
+                const opacity = isSelected ? 1 : 0.5;
+
+                lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                          stroke="${color}" stroke-width="${width}" opacity="${opacity}" />`;
+            });
+
+            svg.innerHTML = lines;
+        }
+
+        // Handle window resize for connector lines
+        window.addEventListener('resize', () => {
+            if (overlapState.zoom === 'week') {
+                drawConnectorLines();
+            }
+        });
 
         // Initialize
         setToday();
